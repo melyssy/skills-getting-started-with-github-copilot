@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="participants-section">
             <h5>Current Participants:</h5>
             <ul class="participants-list">
-              ${details.participants.map(p => `<li>${p}</li>`).join('')}
+              ${details.participants.map(p => `<li><span class="participant-name">${p}</span><button class="delete-btn" data-activity="${name}" data-email="${p}" title="Unregister">✕</button></li>`).join('')}
             </ul>
           </div>
         `;
@@ -68,6 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh the activities list
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
@@ -84,6 +86,35 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDiv.className = "error";
       messageDiv.classList.remove("hidden");
       console.error("Error signing up:", error);
+    }
+  });
+
+  // Handle participant deletion
+  document.addEventListener('click', async (event) => {
+    if (event.target.classList.contains('delete-btn')) {
+      event.preventDefault();
+      const activityName = event.target.getAttribute('data-activity');
+      const email = event.target.getAttribute('data-email');
+
+      try {
+        const response = await fetch(
+          `/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`,
+          {
+            method: "POST",
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Refresh the activities list
+          fetchActivities();
+        } else {
+          console.error("Error unregistering:", result.detail);
+        }
+      } catch (error) {
+        console.error("Error unregistering:", error);
+      }
     }
   });
 
